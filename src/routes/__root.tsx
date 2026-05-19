@@ -79,11 +79,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Panel, estadísticas, predicciones e historial de ventas de laptops e impresoras." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@TechSoluciones" },
       { name: "twitter:title", content: "Tech Soluciones · Inteligencia de Ventas" },
       { name: "twitter:description", content: "Panel, estadísticas, predicciones e historial de ventas de laptops e impresoras." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/bd760d37-e071-430a-8a63-3e655a6b6694/id-preview-60512cfc--29b7ca1f-2b71-40d4-a5c3-ffaac0d3aea7.lovable.app-1779064605873.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/bd760d37-e071-430a-8a63-3e655a6b6694/id-preview-60512cfc--29b7ca1f-2b71-40d4-a5c3-ffaac0d3aea7.lovable.app-1779064605873.png" },
+
     ],
     links: [
       {
