@@ -5,8 +5,8 @@
  * backend Python en lugar de conectarse directamente a Supabase.
  */
 
-// URL base del backend Python
-const API_BASE = "http://localhost:8000";
+// URL base del backend Python (configurable por entorno)
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 

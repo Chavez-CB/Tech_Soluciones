@@ -10,6 +10,7 @@ Uso:
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
@@ -67,14 +68,16 @@ app = FastAPI(
 )
 
 # ─── Middleware CORS ─────────────────────────────────────────────────────────
-# Permite conexiones desde el frontend (Vite corre en puerto 8080)
+# Permite conexiones desde el frontend, configurable por entorno
+cors_origins_str = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:8080,http://localhost:5173,http://localhost:3000"
+)
+origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080",
-        "http://localhost:5173",
-        "http://localhost:3000",
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

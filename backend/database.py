@@ -2,10 +2,11 @@
 database.py - Módulo de conexión y consulta a Supabase.
 
 Gestiona la conexión singleton a Supabase y proporciona funciones
-para obtener datos de la tabla 'ventas' de forma eficiente.
+para obtener datos de la tabla 'ventas' con caché en memoria.
 """
 
 import os
+import time
 import logging
 from functools import lru_cache
 from dotenv import load_dotenv
@@ -28,6 +29,34 @@ if not SUPABASE_URL or not SUPABASE_KEY:
         "son requeridas. Verifica tu archivo .env"
     )
 
+# ─── Caché en memoria con TTL ───────────────────────────────────────────────
+CACHE_TTL_SECONDS = 300  # 5 minutos
+
+_cache: dict = {
+    "ventas": None,
+    "timestamp": 0.0,
+}
+
+
+def _cache_is_valid() -> bool:
+    """Verifica si la caché de ventas sigue vigente."""
+    if _cache["ventas"] is None:
+        return False
+    return (time.time() - _cache["timestamp"]) < CACHE_TTL_SECONDS
+
+
+def invalidar_cache() -> None:
+    """
+    Invalida manualmente la caché de ventas.
+    Útil para forzar una recarga desde Supabase.
+    """
+    _cache["ventas"] = None
+    _cache["timestamp"] = 0.0
+    logger.info("Caché de ventas invalidada manualmente.")
+
+
+# ─── Cliente Supabase (singleton) ────────────────────────────────────────────
+
 
 @lru_cache(maxsize=1)
 def get_supabase_client() -> Client:
@@ -46,12 +75,19 @@ def get_supabase_client() -> Client:
     return client
 
 
-def obtener_ventas() -> list[dict]:
+# ─── Consulta de datos ───────────────────────────────────────────────────────
+
+
+def obtener_ventas(force_refresh: bool = False) -> list[dict]:
     """
     Obtiene todos los registros de la tabla 'ventas' desde Supabase.
 
-    Realiza una consulta paginada para manejar grandes volúmenes de datos,
-    ya que Supabase tiene un límite por defecto de 1000 filas por consulta.
+    Usa caché en memoria con TTL de 5 minutos para evitar consultas
+    repetitivas. Realiza paginación automática para manejar tablas
+    con más de 1000 filas.
+
+    Args:
+        force_refresh: Si True, ignora la caché y consulta Supabase.
 
     Returns:
         list[dict]: Lista de diccionarios con los datos de cada venta.
@@ -59,6 +95,15 @@ def obtener_ventas() -> list[dict]:
     Raises:
         Exception: Si ocurre un error en la consulta a Supabase.
     """
+    # Retornar caché si es válida y no se forzó refresh
+    if not force_refresh and _cache_is_valid():
+        logger.info(
+            f"Retornando {len(_cache['ventas'])} ventas desde caché "
+            f"(TTL: {CACHE_TTL_SECONDS - (time.time() - _cache['timestamp']):.0f}s restantes)."
+        )
+        return _cache["ventas"]
+
+    # Consultar Supabase
     client = get_supabase_client()
     todas_las_ventas: list[dict] = []
     page_size = 1000
@@ -87,7 +132,14 @@ def obtener_ventas() -> list[dict]:
 
             offset += page_size
 
-        logger.info(f"Se obtuvieron {len(todas_las_ventas)} registros de ventas.")
+        # Actualizar caché
+        _cache["ventas"] = todas_las_ventas
+        _cache["timestamp"] = time.time()
+
+        logger.info(
+            f"Se obtuvieron {len(todas_las_ventas)} registros de ventas "
+            f"desde Supabase (caché actualizada, TTL: {CACHE_TTL_SECONDS}s)."
+        )
         return todas_las_ventas
 
     except Exception as e:
