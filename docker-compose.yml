@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  tech-soluciones-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tech-soluciones-backend
+    restart: always
+    ports:
+      - "5189:8000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY}
+      - CORS_ORIGINS=https://tech-soluciones.cabanillas.net.pe,http://localhost:5173,http://localhost:3000
+    networks:
+      - global_net
+
+  tech-soluciones-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_SUPABASE_PROJECT_ID=${VITE_SUPABASE_PROJECT_ID}
+        - VITE_SUPABASE_PUBLISHABLE_KEY=${VITE_SUPABASE_PUBLISHABLE_KEY}
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_API_BASE_URL=https://tech-soluciones-backend.cabanillas.net.pe
+    container_name: tech-soluciones-frontend
+    restart: always
+    ports:
+      - "5188:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - tech-soluciones-backend
+    networks:
+      - global_net
+
+networks:
+  global_net:
+    external: true
