@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "outputDirectory": "dist/client",
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs22.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
+    }
+  ]
+}
